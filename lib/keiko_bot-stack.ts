@@ -13,7 +13,7 @@ export class KeikoBotStack extends cdk.Stack {
       environment: {
         BOT_TOKEN: '', // TODO: insert bot token here!
         BUCKET_NAME: bucket.bucketName,
-        KEIKO_GOAL: '40'
+        KEIKO_GOAL: '60'
       },
     })
 
