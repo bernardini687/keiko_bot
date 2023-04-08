@@ -1,8 +1,10 @@
 package bucket
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,6 +17,14 @@ import (
 type ID struct {
 	Bucket *string
 	Key    *string
+}
+
+type NotFoundError struct {
+	Key string
+}
+
+func (err *NotFoundError) Error() string {
+	return fmt.Sprintf("no data at `%s`", err.Key)
 }
 
 func NewID(bucket, key string) *ID {
@@ -60,7 +70,38 @@ func LookupKey(client *s3.S3, id *ID) (bool, error) {
 	return true, nil
 }
 
-func GetContents(client *s3.S3, id *ID) (string, error) {
+func GetContent(client *s3.S3, id *ID) (string, error) {
+	res, err := client.GetObject(&s3.GetObjectInput{
+		Bucket: id.Bucket,
+		Key:    id.Key,
+		// TODO: what can i gain from specifying the content type?
+	})
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+func GetContentFromKey(key string) (string, error) {
+	id := NewID(os.Getenv("BUCKET_NAME"), key)
+
+	sess := NewSession()
+	client := NewClient(sess)
+	found, err := LookupKey(client, id)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", &NotFoundError{key}
+	}
+
 	res, err := client.GetObject(&s3.GetObjectInput{
 		Bucket: id.Bucket,
 		Key:    id.Key,

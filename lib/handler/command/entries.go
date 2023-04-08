@@ -60,20 +60,7 @@ func ReadEntries(cmd Command) string {
 func GetEntries(date time.Time, cmd Command) (string, error) {
 	key := entriesKey(cmd.Namespace, date)
 
-	id := bucket.NewID(os.Getenv("BUCKET_NAME"), key)
-
-	sess := bucket.NewSession()
-	client := bucket.NewClient(sess)
-	found, err := bucket.LookupKey(client, id)
-	if err != nil {
-		return "", err
-	}
-
-	if !found {
-		return "", fmt.Errorf("no data at `%s`", key)
-	}
-
-	entries, err := bucket.GetContents(client, id)
+	entries, err := bucket.GetContentFromKey(key)
 	if err != nil {
 		return "", err
 	}
@@ -98,7 +85,7 @@ func appendOrUpload(namespace, newContents string) (string, error) {
 
 	if found {
 		// we get the object's contents so we can append data
-		entries, err := bucket.GetContents(client, id)
+		entries, err := bucket.GetContent(client, id)
 		if err != nil {
 			return "", err
 		}
@@ -130,8 +117,7 @@ func designatedTime(num int) time.Time {
 //
 // Example output:
 //
-//     "15012019/2006/01.txt"
-//
+//	"15012019/2006/01.txt"
 func entriesKey(namespace string, date time.Time) string {
 	return fmt.Sprintf("%s/%s.txt", namespace, date.Format("2006/01"))
 }

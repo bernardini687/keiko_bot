@@ -10,23 +10,10 @@ import (
 	kakebo "github.com/bernardini687/kakebo-golang"
 )
 
-// TODO: refactor Stats() - ReadEntries() - GetEntries() - LookupKey()
 func Stats(cmd Command) string {
 	key := duesKey(cmd.Namespace)
-	id := bucket.NewID(os.Getenv("BUCKET_NAME"), key)
 
-	sess := bucket.NewSession()
-	client := bucket.NewClient(sess)
-	found, err := bucket.LookupKey(client, id)
-	if err != nil {
-		return err.Error()
-	}
-
-	if !found {
-		return fmt.Sprintf("no data at `%s`", key)
-	}
-
-	dues, err := bucket.GetContents(client, id)
+	dues, err := bucket.GetContentFromKey(key)
 	if err != nil {
 		return err.Error()
 	}
@@ -63,8 +50,7 @@ func Stats(cmd Command) string {
 //
 // Example output:
 //
-//     "15012019/dues.txt"
-//
+//	"15012019/dues.txt"
 func duesKey(namespace string) string {
 	return fmt.Sprintf("%s/%s.txt", namespace, "dues")
 }
