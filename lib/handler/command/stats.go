@@ -11,9 +11,7 @@ import (
 )
 
 func Stats(cmd Command) string {
-	key := duesKey(cmd.Namespace)
-
-	dues, err := bucket.GetContentFromKey(key)
+	dues, err := bucket.GetContentFromKey(fmt.Sprintf("%s/%s.txt", cmd.Namespace, "dues"))
 	if err != nil {
 		return err.Error()
 	}
@@ -44,13 +42,4 @@ func Stats(cmd Command) string {
 	}
 
 	return kakebo.DisplayStats(date, bal, monthTot, savePercentage)
-}
-
-// duesKey build the S3 key to get to the dues data
-//
-// Example output:
-//
-//	"15012019/dues.txt"
-func duesKey(namespace string) string {
-	return fmt.Sprintf("%s/%s.txt", namespace, "dues")
 }
